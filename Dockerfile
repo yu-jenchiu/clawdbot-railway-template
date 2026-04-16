@@ -86,5 +86,16 @@ COPY local-plugins ./local-plugins
 EXPOSE 8080
 
 # Ensure PID 1 reaps zombies and forwards signals.
+RUN printf '%s\n' \
+'#!/usr/bin/env bash' \
+'set -e' \
+'PLUGIN_DIR="/root/.openclaw/extensions/calendar-tools"' \
+'if [ -d "$PLUGIN_DIR" ]; then' \
+'  mkdir -p "$PLUGIN_DIR/node_modules"' \
+'  ln -sfn /openclaw "$PLUGIN_DIR/node_modules/openclaw"' \
+'fi' \
+'exec node /app/src/server.js' \
+> /usr/local/bin/start-server && chmod +x /usr/local/bin/start-server
+
 ENTRYPOINT ["tini", "--"]
-CMD ["node", "src/server.js"]
+CMD ["/usr/local/bin/start-server"]
