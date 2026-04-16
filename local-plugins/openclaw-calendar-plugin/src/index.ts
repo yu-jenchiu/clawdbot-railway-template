@@ -1,4 +1,4 @@
-import { definePluginEntry } from "openclaw/plugin-sdk";
+import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 
 import {
   calendarTodayTool,
