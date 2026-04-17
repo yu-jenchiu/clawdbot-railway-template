@@ -1109,6 +1109,7 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
         clawArgs(["plugins", "uninstall", name]),
         { timeoutMs: 10 * 60 * 1000 }
     );
+    }
     if (cmd === "openclaw.plugins.purge") {
       const name = String(arg || "").trim();
       if (!name) {
