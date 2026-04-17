@@ -1067,17 +1067,35 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
     }
 
     // Plugin management commands
+    // Plugin management commands
     if (cmd === "openclaw.plugins.list") {
       const r = await runCmd(OPENCLAW_NODE, clawArgs(["plugins", "list"]));
-      return res.status(r.code === 0 ? 200 : 500).json({ ok: r.code === 0, output: redactSecrets(r.output) });
+      return res.status(r.code === 0 ? 200 : 500).json({
+        ok: r.code === 0,
+        output: redactSecrets(r.output),
+      });
     }
+
     if (cmd === "openclaw.plugins.enable") {
       const name = String(arg || "").trim();
-      if (!name) return res.status(400).json({ ok: false, error: "Missing plugin name" });
-      if (!/^[A-Za-z0-9_-]+$/.test(name)) return res.status(400).json({ ok: false, error: "Invalid plugin name" });
-      const r = await runCmd(OPENCLAW_NODE, clawArgs(["plugins", "enable", name]));
-      return res.status(r.code === 0 ? 200 : 500).json({ ok: r.code === 0, output: redactSecrets(r.output) });
+      if (!name) {
+        return res.status(400).json({ ok: false, error: "Missing plugin name" });
+      }
+      if (!/^[A-Za-z0-9_-]+$/.test(name)) {
+        return res.status(400).json({ ok: false, error: "Invalid plugin name" });
+      }
+
+      const r = await runCmd(
+        OPENCLAW_NODE,
+        clawArgs(["plugins", "enable", name])
+      );
+
+      return res.status(r.code === 0 ? 200 : 500).json({
+        ok: r.code === 0,
+        output: redactSecrets(r.output),
+      });
     }
+
     if (cmd === "openclaw.plugins.install") {
       const pluginPath = String(arg || "").trim();
       if (!pluginPath) {
@@ -1134,7 +1152,10 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
       }
 
       if (!fs.existsSync(pluginDir)) {
-        return res.status(404).json({ ok: false, error: `Plugin directory not found: ${pluginDir}` });
+        return res.status(404).json({
+          ok: false,
+          error: `Plugin directory not found: ${pluginDir}`,
+        });
       }
 
       fs.rmSync(pluginDir, { recursive: true, force: true });
