@@ -421,6 +421,7 @@ app.get("/setup", requireSetupAuth, (_req, res) => {
         <option value="openclaw.plugins.enable">openclaw plugins enable &lt;name&gt;</option>
         <option value="openclaw.plugins.install">openclaw plugins install &lt;path&gt;</option>
         <option value="openclaw.plugins.uninstall">openclaw plugins uninstall &lt;name&gt;</option>
+        <option value="openclaw.plugins.purge">openclaw plugins purge &lt;name&gt;</option>
       </select>
       <input id="consoleArg" placeholder="Optional arg (e.g. 200, gateway.port)" style="flex: 1" />
       <button id="consoleRun" style="background:#0f172a">Run</button>
@@ -991,6 +992,7 @@ const ALLOWED_CONSOLE_COMMANDS = new Set([
   "openclaw.plugins.enable",
   "openclaw.plugins.install",
   "openclaw.plugins.uninstall",
+  "openclaw.plugins.purge",
 ]);
 
 app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
@@ -1107,6 +1109,34 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
         clawArgs(["plugins", "uninstall", name]),
         { timeoutMs: 10 * 60 * 1000 }
     );
+    if (cmd === "openclaw.plugins.purge") {
+      const name = String(arg || "").trim();
+      if (!name) {
+        return res.status(400).json({ ok: false, error: "Missing plugin name" });
+      }
+      if (!/^[A-Za-z0-9_-]+$/.test(name)) {
+        return res.status(400).json({ ok: false, error: "Invalid plugin name" });
+      }
+    
+      const pluginsRoot = path.join(os.homedir(), ".openclaw", "extensions");
+      const pluginDir = path.join(pluginsRoot, name);
+
+  // 額外保護：只能刪 extensions 目錄底下的直接子資料夾
+      if (!pluginDir.startsWith(pluginsRoot + path.sep)) {
+        return res.status(400).json({ ok: false, error: "Unsafe plugin path" });
+      }
+
+      if (!fs.existsSync(pluginDir)) {
+        return res.status(404).json({ ok: false, error: `Plugin directory not found: ${pluginDir}` });
+      }
+
+      fs.rmSync(pluginDir, { recursive: true, force: true });
+
+      return res.json({
+        ok: true,
+        output: `Deleted plugin directory: ${pluginDir}\n`,
+      });
+    }
 
   return res.status(r.code === 0 ? 200 : 500).json({
     ok: r.code === 0,
