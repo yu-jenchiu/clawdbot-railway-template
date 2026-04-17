@@ -1095,6 +1095,7 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
         output: redactSecrets(r.output),
       });
     }
+
     if (cmd === "openclaw.plugins.uninstall") {
       const name = String(arg || "").trim();
       if (!name) {
@@ -1108,8 +1109,14 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
         OPENCLAW_NODE,
         clawArgs(["plugins", "uninstall", name]),
         { timeoutMs: 10 * 60 * 1000 }
-    );
+      );
+
+      return res.status(r.code === 0 ? 200 : 500).json({
+        ok: r.code === 0,
+        output: redactSecrets(r.output),
+      });
     }
+
     if (cmd === "openclaw.plugins.purge") {
       const name = String(arg || "").trim();
       if (!name) {
@@ -1118,11 +1125,10 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
       if (!/^[A-Za-z0-9_-]+$/.test(name)) {
         return res.status(400).json({ ok: false, error: "Invalid plugin name" });
       }
-    
+
       const pluginsRoot = path.join(os.homedir(), ".openclaw", "extensions");
       const pluginDir = path.join(pluginsRoot, name);
 
-  // 額外保護：只能刪 extensions 目錄底下的直接子資料夾
       if (!pluginDir.startsWith(pluginsRoot + path.sep)) {
         return res.status(400).json({ ok: false, error: "Unsafe plugin path" });
       }
@@ -1138,7 +1144,6 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
         output: `Deleted plugin directory: ${pluginDir}\n`,
       });
     }
-
   return res.status(r.code === 0 ? 200 : 500).json({
     ok: r.code === 0,
     output: redactSecrets(r.output),
